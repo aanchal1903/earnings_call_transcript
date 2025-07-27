@@ -25,6 +25,14 @@ class Settings:
     GCP_FINANCIAL_DATA_API_KEY: str = os.getenv("GCP_FINANCIAL_DATA_API_KEY", "your-financial-data-api-key")
     FINANCIAL_DATA_API_BASE_URL: str = os.getenv("FINANCIAL_DATA_API_BASE_URL", "https://api.finnhub.io/api/v1")
 
+      # --- THIS IS THE PART THAT WAS MISSING ---
+    # Add these two lines to tell the Settings class to load these variables
+    ALPHA_VANTAGE_API_KEY: str = os.getenv("ALPHA_VANTAGE_API_KEY", "your-alpha-vantage-key")
+    ALPHA_VANTAGE_BASE_URL: str = os.getenv("ALPHA_VANTAGE_BASE_URL", "https://www.alphavantage.co/query")
+    # ----------------------------------------
+    
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "your-google-api-key")
+
     @property
     def earnings_call_transcript_agent_a2a_url(self) -> str:
         """URL for the Earnings Call Transcript Agent A2A service."""
