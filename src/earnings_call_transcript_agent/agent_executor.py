@@ -99,13 +99,7 @@ class EarningsCallTranscriptAgentExecutor(AgentExecutor):
                     if part.function_call:
                         tool_name = part.function_call.name
                         if tool_name == "get_transcript":
-                            thought_text = "Fetching earnings call transcript..."
-                        elif tool_name == "list_available_transcripts":
-                            thought_text = "Searching for available transcripts..."
-                        elif tool_name == "search_transcript_content":
-                            thought_text = "Searching transcript content..."
-                        elif tool_name == "validate_company_ticker":
-                            thought_text = "Validating company ticker..."
+                            thought_text = "Fetching earnings call transcript from the provided URL..."
                         else:
                             thought_text = f"Calling tool: `{tool_name}`..."
                     elif part.function_response:

@@ -1,0 +1,43 @@
+2025-07-28 15:10:36,178 - backend_api.earnings_call_api - INFO - Initializing Advanced Earnings Call Scraper...
+2025-07-28 15:12:59,082 - backend_api.earnings_call_api - INFO - Initializing Advanced Earnings Call Scraper...
+2025-07-28 15:14:26,212 - backend_api.earnings_call_api - INFO - API request: /get-transcript for AAPL Q4 2023
+2025-07-28 15:14:26,215 - backend_api.earnings_call_api - INFO - Attempting to scrape AAPL Q4 2023 from motley_fool
+2025-07-28 15:14:29,956 - backend_api.earnings_call_api - WARNING - Search failed with status 404
+2025-07-28 15:14:32,868 - backend_api.earnings_call_api - WARNING - Search failed with status 404
+2025-07-28 15:14:35,662 - backend_api.earnings_call_api - WARNING - Search failed with status 404
+2025-07-28 15:14:37,949 - backend_api.earnings_call_api - WARNING - Search failed with status 404
+2025-07-28 15:14:37,949 - backend_api.earnings_call_api - WARNING - Failed to get transcript from motley_fool: No valid transcript found
+2025-07-28 15:14:37,950 - backend_api.earnings_call_api - INFO - Attempting to scrape AAPL Q4 2023 from seeking_alpha
+2025-07-28 15:14:52,129 - backend_api.earnings_call_api - ERROR - Seeking Alpha scraping failed: Message: 
+Stacktrace:
+	GetHandleVerifier [0x0x7ff78b1ce935+77845]
+	GetHandleVerifier [0x0x7ff78b1ce990+77936]
+	(No symbol) [0x0x7ff78af89cda]
+	(No symbol) [0x0x7ff78afe06aa]
+	(No symbol) [0x0x7ff78afe095c]
+	(No symbol) [0x0x7ff78b033d07]
+	(No symbol) [0x0x7ff78b00890f]
+	(No symbol) [0x0x7ff78b030b07]
+	(No symbol) [0x0x7ff78b0086a3]
+	(No symbol) [0x0x7ff78afd1791]
+	(No symbol) [0x0x7ff78afd2523]
+	GetHandleVerifier [0x0x7ff78b4a684d+3059501]
+	GetHandleVerifier [0x0x7ff78b4a0c0d+3035885]
+	GetHandleVerifier [0x0x7ff78b4c0400+3164896]
+	GetHandleVerifier [0x0x7ff78b1e8c3e+185118]
+	GetHandleVerifier [0x0x7ff78b1f054f+216111]
+	GetHandleVerifier [0x0x7ff78b1d72e4+113092]
+	GetHandleVerifier [0x0x7ff78b1d7499+113529]
+	GetHandleVerifier [0x0x7ff78b1be298+10616]
+	BaseThreadInitThunk [0x0x7ff84770e8d7+23]
+	RtlUserThreadStart [0x0x7ff84835c34c+44]
+
+2025-07-28 15:14:52,129 - backend_api.earnings_call_api - WARNING - Failed to get transcript from seeking_alpha: No transcript found
+2025-07-28 15:14:52,129 - backend_api.earnings_call_api - INFO - Attempting to scrape AAPL Q4 2023 from yahoo_finance
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - ERROR - Yahoo Finance scraping failed: 'dict' object has no attribute 'empty'
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - WARNING - Failed to get transcript from yahoo_finance: Yahoo Finance data not available
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - INFO - Attempting to scrape AAPL Q4 2023 from fmp
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - WARNING - Failed to get transcript from fmp: FMP requires API key
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - INFO - Attempting to scrape AAPL Q4 2023 from alphaspread
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - WARNING - Failed to get transcript from alphaspread: Source not implemented
+2025-07-28 15:14:52,975 - backend_api.earnings_call_api - ERROR - API error for AAPL: 404: Transcript not found: All sources failed to return transcript

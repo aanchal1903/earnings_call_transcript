@@ -33,11 +33,7 @@ def build_agent() -> LlmAgent:
     logger.info(f"Earnings Call Transcript ADK Agent will connect to its MCP tool server at: {mcp_server_url}")
     
     earnings_call_tool_filter = [
-        "get_transcript",
-        "list_available_transcripts",
-        "search_transcript_content",
-        "get_company_info",
-        "validate_company_ticker"
+        "get_transcript"
     ]
     
     toolset = MCPToolset(

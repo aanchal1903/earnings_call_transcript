@@ -1,6 +1,13 @@
 import sys
 import os
 import uvicorn
+from dotenv import load_dotenv
+
+# This code goes up two directories to find the .env file in the project root
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(dotenv_path=dotenv_path)
+
+# The rest of the original script content (e.g., import sys, import uvicorn...) goes below this.
 
 def main():
     """Launcher for the Backend API server."""

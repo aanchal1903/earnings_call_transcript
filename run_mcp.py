@@ -1,6 +1,11 @@
 import sys
 import os
 import runpy
+from dotenv import load_dotenv
+
+# Load environment variables from project root
+dotenv_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(dotenv_path=dotenv_path)
 
 def main():
     """
@@ -11,12 +16,13 @@ def main():
     src_path = os.path.join(project_root, 'src')
 
     # Add the 'src' directory to the Python path
-    # This ensures that modules like 'config' can be found directly.
     if src_path not in sys.path:
         sys.path.insert(0, src_path)
     
-    # Use runpy to execute the module. Because 'src' is now in the path,
-    # we can refer to the module without the 'src.' prefix.
+    print(f"Python path includes: {src_path}")
+    print("Starting MCP server...")
+    
+    # Use runpy to execute the module using the correct path
     runpy.run_module("mcp_server.server", run_name="__main__")
 
 if __name__ == "__main__":
