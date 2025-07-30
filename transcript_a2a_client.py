@@ -1,9 +1,7 @@
 """
 src/client/earnings_a2a_client.py
 
-A standalone A2A client for testing the Earnings Call Transcript Agent.
-This client manages conversation state (context_id) to support multi-turn
-interactions and proper A2A protocol communication.
+Fixed A2A client with proper context management and session persistence.
 """
 import asyncio
 import json
@@ -62,19 +60,21 @@ def clear_session_ids() -> None:
             logger.error(f"Failed to clear session file: {e}")
 
 def build_message_payload(text: str, user_id: str, task_id=None, context_id=None) -> Dict[str, Any]:
-    """Build A2A message payload."""
+    """Build A2A message payload with proper context."""
     parts = [Part(root=TextPart(text=text))]
     metadata = {"user_id": user_id}
+    
     msg_dict = {
         "role": "user",
         "parts": parts,
         "messageId": uuid4().hex,
         "metadata": metadata,
     }
-    if task_id:
-        msg_dict["taskId"] = task_id
+    
+    # IMPORTANT: Don't include task_id in subsequent messages, only context_id
     if context_id:
         msg_dict["contextId"] = context_id
+    
     return {"message": Message.model_validate(msg_dict)}
 
 async def poll_for_final_task(client: A2AClient, task_id: str, context_id: str) -> Optional[Task]:
@@ -82,7 +82,7 @@ async def poll_for_final_task(client: A2AClient, task_id: str, context_id: str) 
     logger.info(f"Polling task {task_id} for completion.")
     last_text = ""
     
-    for _ in range(300):  # 5-minute timeout (earnings calls can take time to scrape)
+    for _ in range(300):  # 5-minute timeout
         await asyncio.sleep(1)
         try:
             request = GetTaskRequest(id=uuid4().hex, params=TaskQueryParams(id=task_id))
@@ -119,28 +119,38 @@ async def poll_for_final_task(client: A2AClient, task_id: str, context_id: str) 
     return None
 
 async def interactive_loop(client: A2AClient, user_id: str) -> None:
-    """Interactive loop for chatting with the earnings call transcript agent."""
-    print("🎯 Earnings Call Transcript Agent - Interactive Client")
+    """Interactive loop with fixed context management."""
+    print("🎯 Enhanced Earnings Call Transcript Agent - Interactive Client")
     print("=" * 60)
     print(f"Connected as user: {user_id}")
     print()
-    print("💡 Example queries:")
-    print("  • Get Apple's Q1 2024 earnings call transcript")
-    print("  • Search for 'iPhone' in Microsoft's latest earnings call")
-    print("  • List available transcripts for Tesla")
-    print("  • What did Amazon's CEO say about AWS growth?")
-    print("  • Who were the analysts asking questions in Google's Q4 2023 call?")
+    print("💡 Features:")
+    print("  • Automatic search across multiple sources")
+    print("  • EarningsCall API integration (250 free calls/month)")
+    print("  • Maintains conversation context")
+    print("  • Fallback to user-provided URLs")
+    print()
+    print("📝 Example queries:")
+    print("  • Get Microsoft's Q4 2023 earnings call")
+    print("  • Show me Apple's latest earnings transcript")
+    print("  • What did the CEO say about guidance?")
+    print("  • Search for AI mentions in the last transcript")
     print()
     print("Commands:")
     print("  • Type 'exit' or 'quit' to exit")
-    print("  • Type '/reset' to start a new session")
-    print("  • Type '/help' to see examples")
+    print("  • Type '/reset' to start a new conversation")
+    print("  • Type '/help' to see more examples")
     print()
 
-    current_task_id, current_context_id = load_session_ids()
-
-    if current_task_id and current_context_id:
-        print(f"📝 Restored session: task_id={current_task_id[:8]}..., context_id={current_context_id[:8]}...")
+    # Initialize or restore context
+    _, current_context_id = load_session_ids()
+    
+    # If no context exists, create a new one
+    if not current_context_id:
+        current_context_id = str(uuid4())
+        logger.info(f"Created new context: {current_context_id}")
+    else:
+        print(f"📝 Restored conversation context: {current_context_id[:8]}...")
         print()
 
     while True:
@@ -150,38 +160,41 @@ async def interactive_loop(client: A2AClient, user_id: str) -> None:
             if not query:
                 continue
                 
-            if query.lower() in {"exit", "quit"}:
+            if query.lower() in {"exit", "quit", "/exit", "/quit"}:
                 print("👋 Goodbye!")
                 break
                 
             if query == "/reset":
                 clear_session_ids()
-                current_task_id = current_context_id = None
-                print("🔄 Session reset. Starting fresh conversation.\n")
+                current_context_id = str(uuid4())
+                print(f"🔄 Conversation reset. New context: {current_context_id[:8]}...\n")
                 continue
                 
             if query == "/help":
-                print("\n💡 Try these example queries:")
-                print("  • Get me Apple's Q1 2024 earnings call transcript")
-                print("  • Search for mentions of 'artificial intelligence' in Microsoft's Q4 2023 call")
-                print("  • What did Tesla's CEO say about production targets?")
-                print("  • List all available transcripts for Google")
-                print("  • Who were the analysts in Amazon's latest earnings call?")
-                print("  • Validate ticker symbol NVDA")
+                print("\n💡 Example queries:")
+                print("  • Get Microsoft's Q4 2023 earnings transcript")
+                print("  • Show me Apple's Q2 2024 earnings call")
+                print("  • Get Tesla's latest quarterly earnings")
+                print("  • What did management say about revenue growth?")
+                print("  • Find mentions of 'cloud' in the transcript")
+                print("  • Summarize the Q&A section")
+                print("\n📌 Direct URLs also work:")
+                print("  • Get transcript from https://example.com/earnings")
                 print()
                 continue
 
-            # Build and send message
-            payload = build_message_payload(query, user_id, current_task_id, current_context_id)
-            send_req = SendMessageRequest(id=uuid4().hex, params=MessageSendParams(message=payload["message"]))
+            # Build message with context
+            payload = build_message_payload(query, user_id, context_id=current_context_id)
+            send_req = SendMessageRequest(
+                id=uuid4().hex, 
+                params=MessageSendParams(message=payload["message"])
+            )
             
-            print("⏳ Sending message to agent...")
+            print("⏳ Processing your request...")
             response = await client.send_message(send_req)
 
             if isinstance(response.root, JSONRPCErrorResponse):
-                print(f"❌ Send error: {response.root.error.message}")
-                clear_session_ids()
-                current_task_id = current_context_id = None
+                print(f"❌ Error: {response.root.error.message}")
                 continue
 
             if not isinstance(response.root, SendMessageSuccessResponse):
@@ -189,17 +202,23 @@ async def interactive_loop(client: A2AClient, user_id: str) -> None:
                 continue
 
             task = response.root.result
-            current_task_id, current_context_id = task.id, task.contextId
-            save_session_ids(current_task_id, current_context_id)
-
-            print(f"📋 Task created: {current_task_id[:8]}...")
+            task_id = task.id
+            
+            # Update context_id if provided by server
+            if hasattr(task, 'context_id') and task.context_id:
+                current_context_id = task.context_id
+            
+            # Save the current context (not task_id)
+            save_session_ids("", current_context_id)
+            
+            print(f"📋 Processing task: {task_id[:8]}...")
             
             # Poll for completion
-            final = await poll_for_final_task(client, current_task_id, current_context_id)
+            final = await poll_for_final_task(client, task_id, current_context_id)
             
             if final and final.status.message:
                 print("\n" + "=" * 60)
-                print("🤖 Final Response:")
+                print("🤖 Agent Response:")
                 print("=" * 60)
                 parts = final.status.message.parts
                 texts = [p.root.text for p in parts if isinstance(p.root, TextPart) and p.root.text]
@@ -209,16 +228,16 @@ async def interactive_loop(client: A2AClient, user_id: str) -> None:
                 
                 # Show task completion status
                 if final.status.state == TaskState.completed:
-                    print("✅ Task completed successfully")
+                    print("✅ Request completed successfully")
                 elif final.status.state == TaskState.failed:
-                    print("❌ Task failed")
+                    print("❌ Request failed")
                 elif final.status.state == TaskState.canceled:
-                    print("⚠️ Task was canceled")
+                    print("⚠️ Request was canceled")
                     
             elif final:
-                print(f"⚠️ Task {final.status.state.value}: No message returned.")
+                print(f"⚠️ Task {final.status.state.value}: No response received.")
             else:
-                print("❌ Agent did not respond or timed out.")
+                print("❌ Request timed out.")
                 
             print()  # Add spacing between interactions
 
@@ -227,32 +246,13 @@ async def interactive_loop(client: A2AClient, user_id: str) -> None:
             break
         except Exception as e:
             print(f"❌ Error: {e}")
-            traceback.print_exc()
+            logger.error("Unexpected error:", exc_info=True)
             print()
-
-# @click.command()
-# @click.option(
-#     "--agent-url", 
-#     default="http://localhost:8080", 
-#     show_default=True, 
-#     help="Earnings Call Transcript Agent URL"
-# )
-# @click.option(
-#     "--user-id", 
-#     default=f"earnings-user-{uuid4().hex[:6]}", 
-#     show_default=True, 
-#     help="User ID for session"
-# )
-# def cli_main(agent_url: str, user_id: str) -> None:
-#     """CLI entry point for the earnings call transcript agent client."""
-#     asyncio.run(run_client_interaction(agent_url, user_id))
-
-# In your transcript_a2a_client.py, change the default port:
 
 @click.command()
 @click.option(
     "--agent-url", 
-    default="http://localhost:8081",  # Changed to match A2A server port
+    default="http://localhost:8081",
     show_default=True, 
     help="Earnings Call Transcript Agent URL"
 )
@@ -271,7 +271,7 @@ async def run_client_interaction(agent_url: str, user_id: str) -> None:
     logger.info(f"Connecting to {agent_url} as {user_id}")
     
     try:
-        async with httpx.AsyncClient(timeout=300.0) as session:  # 5 minute timeout for scraping
+        async with httpx.AsyncClient(timeout=300.0) as session:
             print(f"🔗 Connecting to earnings call transcript agent at {agent_url}")
             client = await A2AClient.get_client_from_agent_card_url(session, agent_url)
             print("✅ Connected successfully!")
@@ -280,14 +280,15 @@ async def run_client_interaction(agent_url: str, user_id: str) -> None:
             
     except httpx.ConnectError:
         print(f"❌ Cannot connect to agent at {agent_url}")
-        print("Make sure your agent is running:")
-        print("  python run_backend.py  # Terminal 1")
-        print("  python run_mcp.py      # Terminal 2") 
-        print("  python run_a2a.py      # Terminal 3")
+        print("\nMake sure all services are running:")
+        print("  1. python run_backend.py    # Backend API (port 8082)")
+        print("  2. python run_mcp.py        # MCP Server (port 8001)")
+        print("  3. python run_a2a.py        # A2A Server (port 8081)")
+        print("\nThen run this client again.")
         
     except Exception as exc:
         print(f"❌ Startup error: {exc}")
-        traceback.print_exc()
+        logger.error("Startup failed:", exc_info=True)
 
 if __name__ == "__main__":
     cli_main()
